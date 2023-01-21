@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import datetime
 import time
 from http import HTTPStatus
@@ -9,7 +8,7 @@ import telegram
 import requests
 from exceptions import ApiResponseError, MessageSendingError, StatusError
 
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 load_dotenv()
 
 
@@ -41,7 +40,7 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Доступность переменных окружения,
-    необходимых для работы программы"""
+необходимых для работы программы."""
     tokens = [
         PRACTICUM_TOKEN,
         TELEGRAM_TOKEN,
@@ -55,7 +54,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """Отправление сообщения в Telegram чат"""
+    """Отправление сообщения в Telegram чат."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
@@ -69,7 +68,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """Запрос к единственному эндпоинту API-сервиса"""
+    """Запрос к единственному эндпоинту API-сервиса."""
     params = {'from_date': timestamp}
     REQUEST = {
         'endpoint': ENDPOINT,
@@ -86,8 +85,9 @@ def get_api_answer(timestamp):
     response = response.json()
     return response
 
+
 def check_response(response):
-    """Проверка ответа API на соответствие документации"""
+    """Проверка ответа API на соответствие документации."""
     if not isinstance(response, dict):
         raise TypeError('Ответ сервера содержит неправильный тип данных')
     if ('homeworks' or 'current_date') not in response:
@@ -100,7 +100,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлечение информации о д/з статус этой работы"""
+    """Извлечение информации о д/з статус этой работы."""
     if 'homework_name' not in homework:
         raise KeyError('Ответ сервера не содержит нужных ключей')
     homework_status = homework.get('status')
@@ -112,7 +112,7 @@ def parse_status(homework):
 
 
 def main():
-    """Основная логика работы бота"""
+    """Основная логика работы бота."""
     if not check_tokens():
         exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
@@ -143,6 +143,7 @@ def main():
             logger.critical(message)
         finally:
             time.sleep(RETRY_PERIOD)
+
 
 if __name__ == '__main__':
     main()
