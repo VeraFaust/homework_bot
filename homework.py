@@ -39,8 +39,8 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """Доступность переменных окружения,
-необходимых для работы программы."""
+    """Доступность переменных окружения,"""
+    """необходимых для работы программы."""
     tokens = [
         PRACTICUM_TOKEN,
         TELEGRAM_TOKEN,
@@ -64,7 +64,6 @@ def send_message(bot, message):
         )
     else:
         logger.info('Сообщение отправлено!')
-
 
 
 def get_api_answer(timestamp):
