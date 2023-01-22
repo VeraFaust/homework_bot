@@ -118,11 +118,11 @@ def main():
         bot,
         f'Бот начал работу: {now.strftime("%d-%m-%Y %H:%M")}')
     current_timestamp = int(time.time())
-    tmp_status = ''
-    errors = ''
+    tmp_status = 'reviewing'
+    errors = True
     while True:
         try:
-            response = get_api_answer(current_timestamp)
+            response = get_api_answer(ENDPOINT, current_timestamp)
             homework = check_response(response)
             if homework and tmp_status != homework['status']:
                 message = parse_status(homework)
