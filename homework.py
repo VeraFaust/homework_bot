@@ -24,7 +24,7 @@ HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format = logging.Formatter(
+    format=logging.Formatter(
         '%(asctime)s-%(name)s-%(levelname)s-'
         '%(funcName)s-%(lineno)d-%(message)s'
     )
