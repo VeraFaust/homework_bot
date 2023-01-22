@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -7,7 +8,7 @@ from http import HTTPStatus
 
 import telegram
 import requests
-from exceptions import ApiResponseError, StatusError
+from exceptions import ApiResponseError, StatusError, ConversionError
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -21,12 +22,15 @@ RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - '
+        '%(funcName)s - %(lineno)d - %(message)s'
+    )
+)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-format = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - '
-    '%(funcName)s - %(lineno)d - %(message)s'
-)
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(format)
@@ -77,24 +81,49 @@ def get_api_answer(timestamp):
     try:
         response = requests.get(REQUEST)
     except Exception as error:
-        raise ApiResponseError(f'Ошибка при запросе к основному API: {error}')
+        raise ApiResponseError(
+            f'Ошибка при запросе к основному API: {error}'
+        )
+    else:
+        logger.info('Ответ от API получен')
     if response.status_code != HTTPStatus.OK:
-        raise ApiResponseError('Ошибка при запросе к основному API.')
+        raise ApiResponseError(
+            'Ошибка при запросе к основному API'
+        )
+    try:
+        response = response.json()
+    except json.decoder.JSONDecodeError:
+        raise ConversionError(
+            'Не удалось преобразовать ответ от API в JSON'
+        )
+    else:
+        logger.info(
+            'Ответ от API преобразован в JSON'
+        )
     logger.debug('Получен ответ от сервера')
-    response = response.json()
     return response
 
 
 def check_response(response):
     """Проверка ответа API на соответствие документации."""
-    if not isinstance(response, dict):
-        raise TypeError('Ответ сервера содержит неправильный тип данных')
-    if ('homeworks' or 'current_date') not in response:
-        raise KeyError('Ответ сервера не содержит нужных ключей')
-    homeworks = response['homeworks']
-    if not isinstance(homeworks, list):
-        raise TypeError('В ответе сервера есть неправильный тип данных')
-    logger.debug('Ответ сервера правильный!')
+    if type(response) is not dict:
+        logger.error(
+            'Сбой в работе программы: Ответ API имеет тип данных, '
+            'отличный от dict'
+        )
+        raise TypeError('Ответ API имеет тип данных, отличный от dict')
+    homeworks = response.get('homeworks')
+    if homeworks is None:
+        logger.error(
+            'Сбой в работе программы: Ответ API не содержит ключ "homeworks"'
+        )
+        raise KeyError('Ответ API не содержит ключ "homeworks"')
+    if type(homeworks) is not list:
+        logger.error(
+            'Сбой в работе программы: Значение ключа "homeworks" '
+            'не является списком'
+        )
+        raise TypeError('Значение ключа "homeworks" не является списком')
     return homeworks
 
 
@@ -128,9 +157,9 @@ def main():
             homeworks = check_response(response)
             if homeworks:
                 message = parse_status(homeworks[0])
-            else:
-                message = 'Обновлений по домашней работе нет'
-                logger.debug(message)
+                send_message(bot, message)
+                logging.debug('Бот работает!')
+                current_timestamp = response['current_date']
             if message != previous_message:
                 logger.info('Новое сообщение')
                 send_message(bot, message)
@@ -155,10 +184,8 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-
-            time.sleep(RETRY_PERIOD)
         finally:
-            logger.info('Новый запрос')
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
