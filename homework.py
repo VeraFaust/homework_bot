@@ -7,7 +7,7 @@ from http import HTTPStatus
 
 import telegram
 import requests
-from exceptions import ApiResponseError, MessageSendingError, StatusError
+from exceptions import ApiResponseError, StatusError
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -57,11 +57,13 @@ def check_tokens():
 def send_message(bot, message):
     """Отправление сообщения в Telegram чат."""
     try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info('Сообщение отправлено')
-    except MessageSendingError(message):
-        message = 'сообщение не отправлено'
-        logger.error(message)
+        bot.send_message(
+            TELEGRAM_CHAT_ID,
+            message
+        )
+        logger.debug('Сообщение отправлено')
+    except Exception as error:
+        logger.error(f'Сообщение не отправлено. {error}')
 
 
 def get_api_answer(timestamp):
@@ -112,34 +114,51 @@ def main():
     """Основная логика работы бота."""
     if not check_tokens():
         sys.exit()
+    current_timestamp = int(time.time())
+    previous_message = None
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    logger.info('Установлена связь с ботом!')
     now = datetime.datetime.now()
     send_message(
         bot,
         f'Бот начал работу: {now.strftime("%d-%m-%Y %H:%M")}')
-    current_timestamp = int(time.time())
-    tmp_status = 'reviewing'
-    errors = True
     while True:
         try:
-            response = get_api_answer(ENDPOINT, current_timestamp)
-            homework = check_response(response)
-            if homework and tmp_status != homework['status']:
-                message = parse_status(homework)
+            response = get_api_answer(current_timestamp)
+            homeworks = check_response(response)
+            if homeworks:
+                message = parse_status(homeworks[0])
+            else:
+                message = 'Обновлений по домашней работе нет'
+                logger.debug(message)
+            if message != previous_message:
+                logger.info('Новое сообщение')
                 send_message(bot, message)
-                tmp_status = homework['status']
-            logger.info(
-                'Изменений нет, ждем 10 минут и проверяем API')
-            time.sleep(RETRY_PERIOD)
+                previous_message = message
+            else:
+                logger.info('Нового сообщения нет')
+            try:
+                current_timestamp = response['current_date']
+            except KeyError:
+                current_timestamp = int(time.time())
+                logger.debug(
+                    'Не удалось получить время запроса из ответа от API'
+                    'Для выполнения следующего запроса принято текущее время'
+                )
+            else:
+                logger.info('Время запроса получено из ответа от API.')
 
+            time.sleep(RETRY_PERIOD)
+            logger.debug(
+                'Программа работает. Предыдущий запрос выполнен успешно'
+            )
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if errors:
-                errors = False
-                send_message(bot, message)
-            logger.critical(message)
-        finally:
+            logger.error(message)
+
             time.sleep(RETRY_PERIOD)
+        finally:
+            logger.info('Новый запрос')
 
 
 if __name__ == '__main__':
