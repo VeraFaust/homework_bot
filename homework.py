@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import datetime
 import time
 from http import HTTPStatus
@@ -58,12 +59,9 @@ def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
-    except Exception as error:
-        raise MessageSendingError(
-            f'Ошибка при отправке сообщения в Телеграм: {error}'
-        )
-    else:
-        logger.info('Сообщение отправлено!')
+    except MessageSendingError(message):
+        message = 'сообщение не отправлено'
+        logger.error(message)
 
 
 def get_api_answer(timestamp):
@@ -113,18 +111,18 @@ def parse_status(homework):
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
-        exit()
+        sys.exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     now = datetime.datetime.now()
     send_message(
         bot,
-        f'Начало работы: {now.strftime("%d-%m-%Y %H:%M")}')
+        f'Бот начал работу: {now.strftime("%d-%m-%Y %H:%M")}')
     current_timestamp = int(time.time())
-    tmp_status = 'reviewing'
-    errors = True
+    tmp_status = ''
+    errors = ''
     while True:
         try:
-            response = get_api_answer(ENDPOINT, current_timestamp)
+            response = get_api_answer(current_timestamp)
             homework = check_response(response)
             if homework and tmp_status != homework['status']:
                 message = parse_status(homework)
