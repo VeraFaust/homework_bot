@@ -106,12 +106,10 @@ def get_api_answer(timestamp):
 
 def check_response(response):
     """Проверка ответа API на соответствие документации."""
-    if type(response) is not dict:
-        logger.error(
-            'Сбой в работе программы: Ответ API имеет тип данных, '
-            'отличный от dict'
+    if not isinstance(response, dict):
+        raise TypeError(
+            'Ответ API имеет тип данных, отличный от словаря'
         )
-        raise TypeError('Ответ API имеет тип данных, отличный от dict')
     homeworks = response.get('homeworks')
     if homeworks is None:
         logger.error(
@@ -154,29 +152,18 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
+            current_timestamp = response.get('current_date')
             homeworks = check_response(response)
             if homeworks:
                 message = parse_status(homeworks[0])
                 send_message(bot, message)
                 logging.debug('Бот работает!')
-                current_timestamp = response['current_date']
             if message != previous_message:
                 logger.info('Новое сообщение')
                 send_message(bot, message)
                 previous_message = message
             else:
                 logger.info('Нового сообщения нет')
-            try:
-                current_timestamp = response['current_date']
-            except KeyError:
-                current_timestamp = int(time.time())
-                logger.debug(
-                    'Не удалось получить время запроса из ответа от API'
-                    'Для выполнения следующего запроса принято текущее время'
-                )
-            else:
-                logger.info('Время запроса получено из ответа от API.')
-
             time.sleep(RETRY_PERIOD)
             logger.debug(
                 'Программа работает. Предыдущий запрос выполнен успешно'
@@ -184,6 +171,8 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
+            send_message(bot, message)
+            logger.info('Отчет об ошибке')
         finally:
             time.sleep(RETRY_PERIOD)
 
