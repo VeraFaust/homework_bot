@@ -111,7 +111,7 @@ def check_response(response):
     homeworks = response.get('homeworks')
     if homeworks is None:
         raise KeyError('Отсутствует ключ homeworks')
-    if not isinstance (homeworks, list):
+    if not isinstance(homeworks, list):
         raise TypeError('Значение ключа "homeworks" не является списком')
     if 'current_date' not in response.keys():
         raise KeyError('В ответе API отстутсвуют нужные ключи')
