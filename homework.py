@@ -107,21 +107,14 @@ def get_api_answer(timestamp):
 def check_response(response):
     """Проверка ответа API на соответствие документации."""
     if not isinstance(response, dict):
-        raise TypeError(
-            'Ответ API имеет тип данных, отличный от словаря'
-        )
+        raise TypeError('Ответ API не является словарем')
     homeworks = response.get('homeworks')
     if homeworks is None:
-        logger.error(
-            'Сбой в работе программы: Ответ API не содержит ключ "homeworks"'
-        )
-        raise KeyError('Ответ API не содержит ключ "homeworks"')
-    if type(homeworks) is not list:
-        logger.error(
-            'Сбой в работе программы: Значение ключа "homeworks" '
-            'не является списком'
-        )
+        raise KeyError('Отсутствует ключ homeworks')
+    if not isinstance (homeworks, list):
         raise TypeError('Значение ключа "homeworks" не является списком')
+    if 'current_date' not in response.keys():
+        raise KeyError('В ответе API отстутсвуют нужные ключи')
     return homeworks
 
 
@@ -142,37 +135,32 @@ def main():
     if not check_tokens():
         sys.exit()
     current_timestamp = int(time.time())
-    previous_message = None
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     logger.info('Установлена связь с ботом!')
     now = datetime.datetime.now()
+    error_list = []
     send_message(
         bot,
         f'Бот начал работу: {now.strftime("%d-%m-%Y %H:%M")}')
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            current_timestamp = response.get('current_date')
             homeworks = check_response(response)
             if homeworks:
-                message = parse_status(homeworks[0])
-                send_message(bot, message)
-                logging.debug('Бот работает!')
-            if message != previous_message:
-                logger.info('Новое сообщение')
-                send_message(bot, message)
-                previous_message = message
+                send_message(bot, parse_status(homeworks[0]))
             else:
-                logger.info('Нового сообщения нет')
-            time.sleep(RETRY_PERIOD)
-            logger.debug(
-                'Программа работает. Предыдущий запрос выполнен успешно'
-            )
+                logger.info('Статус домашнего задания не обновился')
+            error_list.clear()
+            current_timestamp = response.get('current_date')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            send_message(bot, message)
-            logger.info('Отчет об ошибке')
+            if message not in error_list:
+                bot.send_message(
+                    chat_id=TELEGRAM_CHAT_ID,
+                    text=message
+                )
+                error_list.append(message)
         finally:
             time.sleep(RETRY_PERIOD)
 
