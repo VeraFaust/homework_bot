@@ -147,9 +147,10 @@ def main():
             response = get_api_answer(current_timestamp)
             homeworks = check_response(response)
             if homeworks:
-                send_message(bot, parse_status(homeworks[0]))
+                message = parse_status(homeworks[0])
             else:
-                logger.info('Обновлений по домашней работе нет')
+                message = 'Обновлений по домашней работе нет'
+                logger.debug(message)
             if message != previous_message:
                 logger.info('Новое сообщение')
                 send_message(bot, message)
