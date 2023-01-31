@@ -138,7 +138,10 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     logger.info('Установлена связь с ботом!')
     now = datetime.datetime.now()
-    error_list = []
+    initial_error = ''
+    error_msg = (
+            'Отсутствуют обязательные переменные окружения'
+        )
     send_message(
         bot,
         f'Бот начал работу: {now.strftime("%d-%m-%Y %H:%M")}')
@@ -150,17 +153,17 @@ def main():
                 send_message(bot, parse_status(homeworks[0]))
             else:
                 logger.info('Статус домашнего задания не обновился')
-            error_list.clear()
+            initial_error.clear()
             current_timestamp = response.get('current_date')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            if message not in error_list:
+            if message not in initial_error:
                 bot.send_message(
                     chat_id=TELEGRAM_CHAT_ID,
                     text=message
                 )
-                error_list.append(message)
+                initial_error.append(error_msg)
         finally:
             time.sleep(RETRY_PERIOD)
 
