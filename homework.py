@@ -135,7 +135,7 @@ def main():
     if not check_tokens():
         sys.exit()
     current_timestamp = int(time.time())
-    previous_message = None
+    previous_message = ''
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     logger.info('Установлена связь с ботом!')
     now = datetime.datetime.now()
@@ -160,11 +160,10 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            if message not in previous_message:
-                bot.send_message(
-                    bot,
-                    message
-                )
+            send_message(
+                bot,
+                message
+            )
         finally:
             time.sleep(RETRY_PERIOD)
 
