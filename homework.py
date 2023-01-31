@@ -140,8 +140,8 @@ def main():
     now = datetime.datetime.now()
     initial_error = ''
     error_msg = (
-            'Отсутствуют обязательные переменные окружения'
-        )
+        'Отсутствуют обязательные переменные окружения'
+    )
     send_message(
         bot,
         f'Бот начал работу: {now.strftime("%d-%m-%Y %H:%M")}')
