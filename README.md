@@ -41,13 +41,13 @@ pip install -r requirements.txt
 ## Пример ответа API:
 "homeworks":[  
    {  
-      "id":123,  
-      "status":"approved",  
-      "homework_name":"username__hw_test.zip",  
-      "reviewer_comment":"Всё нравится",  
-      "date_updated":"2020-02-11T14:40:57Z",  
-      "lesson_name":"Тестовый проект"  
-   }
+        "id":123,  
+        "status":"approved",  
+        "homework_name":"username__hw_test.zip",  
+        "reviewer_comment":"Всё нравится",  
+        "date_updated":"2020-02-11T14:40:57Z",  
+        "lesson_name":"Тестовый проект"  
+     }
 ]
 
 ## Автор
