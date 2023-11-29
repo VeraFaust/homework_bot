@@ -39,6 +39,7 @@ pip install -r requirements.txt
 - Запустите файл homework.py.
 
 ## Пример ответа API:
+```
 {
    "homeworks":[
       {
@@ -63,6 +64,7 @@ pip install -r requirements.txt
    ],
    "current_date":1581604970
 }
+```
 
 ## Автор
 Вера Фауст
