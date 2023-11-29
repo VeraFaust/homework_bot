@@ -28,7 +28,7 @@ python -m venv venv
 source venv/Scripts/activate
 ```
 
-- Установите зависимости из файла requirements.txt
+- Установите зависимости из файла requirements.txt:
 ```
 py -m pip install --upgrade pip
 ```
