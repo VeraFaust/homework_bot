@@ -7,16 +7,6 @@
 - approved: ревью успешно пройдено;
 - rejected: работа проверена, но у ревьюера есть замечания.
 
-## Пример ответа API:
-{
-   "id":123,
-   "status":"approved",
-   "homework_name":"username__hw_test.zip",
-   "reviewer_comment":"Всё нравится",
-   "date_updated":"2020-02-11T14:40:57Z",
-   "lesson_name":"Тестовый проект"
-}
-
 ## Технологии:
 - API;
 - REST;
@@ -45,15 +35,20 @@ py -m pip install --upgrade pip
 ```
 pip install -r requirements.txt
 ```
-- 
-Перейти по ссылке:
-На сайт http://127.0.0.1:8000/  
-В админ-зону http://127.0.0.1:8000/admin
 
-Остановить работу:
-```
-Ctrl+C
-```
+- Запустите файл homework.py.
+
+## Пример ответа API:
+"homeworks":[  
+   {  
+      "id":123,  
+      "status":"approved",  
+      "homework_name":"username__hw_test.zip",  
+      "reviewer_comment":"Всё нравится",  
+      "date_updated":"2020-02-11T14:40:57Z",  
+      "lesson_name":"Тестовый проект"  
+   }
+]
 
 ## Автор
 Вера Фауст
